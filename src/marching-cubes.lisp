@@ -35,14 +35,14 @@
        
 ;; grid-cell
 
-(defstruct (grid-cell (:constructor make-grid-cell (vertices values)))
-  vertices values)
+(defstruct (grid-cell (:constructor make-grid-cell (vertices% values%)))
+  vertices% values%)
 
 (defmacro grid-cell-vertex (grid i)
-  `(aref (grid-cell-vertices ,grid) ,i))
+  `(aref (grid-cell-vertices% ,grid) ,i))
 
 (defmacro grid-cell-value (grid i)
-  `(aref (grid-cell-values ,grid) ,i))
+  `(aref (grid-cell-values% ,grid) ,i))
 
 
 ;; grid
@@ -78,22 +78,22 @@
   (loop for i from 0 to (grid-size-x grid) 
      append (loop for j from 0 to (grid-size-y grid)
        append (loop for k from 0 to (grid-size-z grid)
-         append (let ((cell (make-cell-with-grid grid i j k)))
+         append (let ((cell (grid-cell grid i j k)))
                   (funcall fn cell))))))
 
-(defun make-cell-with-grid (grid i j k)
+(defun grid-cell (grid i j k)
   (assert (and (grid-p grid)
                (<= 0 i) (< i (grid-size-x grid))
                (<= 0 j) (< j (grid-size-y grid))
                (<= 0 k) (< k (grid-size-z grid))))
-  (let ((vertices (grid-vertices grid i j k))
-        (values (grid-values grid i j k)))
+  (let ((vertices (grid-cell-vertices grid i j k))
+        (values (grid-cell-values grid i j k)))
     (make-grid-cell vertices values)))
 
 (defvar *vertex-offsets* '((0 0 0) (1 0 0) (1 1 0) (0 1 0)
                            (0 0 1) (1 0 1) (1 1 1) (0 1 1)))
 
-(defun grid-vertices (grid i j k)
+(defun grid-cell-vertices (grid i j k)
   (assert (and (grid-p grid)
                (<= 0 i) (< i (grid-size-x grid))
                (<= 0 j) (< j (grid-size-y grid))
@@ -105,7 +105,7 @@
               (grid-point grid (+ i di) (+ j dj) (+ k dk)))))
     vertices))
 
-(defun grid-values (grid i j k)
+(defun grid-cell-values (grid i j k)
   (assert (and (grid-p grid)
                (<= 0 i) (< i (grid-size-x grid))
                (<= 0 j) (< j (grid-size-y grid))
