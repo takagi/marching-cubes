@@ -6,7 +6,8 @@
 (in-package :cl-user)
 (defpackage marching-cubes
   (:use :cl)
-  (:export :make-vec3
+  (:export :marching-cubes
+           :make-vec3
            :vec3=
            :make-triangle
            :triangle=))

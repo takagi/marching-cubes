@@ -38,11 +38,94 @@
 (defstruct (grid-cell (:constructor make-grid-cell (vertices values)))
   vertices values)
 
-(defmacro grid-vertex (grid i)
+(defmacro grid-cell-vertex (grid i)
   `(aref (grid-cell-vertices ,grid) ,i))
 
-(defmacro grid-value (grid i)
+(defmacro grid-cell-value (grid i)
   `(aref (grid-cell-values ,grid) ,i))
+
+
+;; grid
+
+(defstruct (grid (:constructor make-raw-grid (origin size-x size-y size-z
+                                                     delta values%)))
+  origin size-x size-y size-z delta values%)
+
+(defun make-grid (fn min max delta)
+  (labels ((size (min max delta)
+             (assert (and (< min max) (< 0 delta)))
+             (multiple-value-bind (x y) (floor (/ (- max min) delta))
+               (if (= y 0) x (1+ x)))))
+    (let ((i (size (vec3-x min) (vec3-x max) delta))
+          (j (size (vec3-y min) (vec3-y max) delta))
+          (k (size (vec3-z min) (vec3-z max) delta)))
+      (let ((values% (make-grid-values fn i j k min delta)))
+        (make-raw-grid min i j k delta values%)))))
+
+(defun make-grid-values (fn i j k origin delta)
+  (let ((values (make-array (list (1+ i) (1+ j) (1+ k)))))
+    (dotimes (x (1+ i))
+      (dotimes (y (1+ j))
+        (dotimes (z (1+ k))
+          (setf (aref values x y z)
+                (funcall fn
+                         (+ (vec3-x origin) (* x delta))
+                         (+ (vec3-y origin) (* y delta))
+                         (+ (vec3-z origin) (* z delta)))))))))
+  
+(defun reduce-grid (grid fn)
+  (assert (grid-p grid))
+  (loop for i from 0 to (grid-size-x grid) 
+     append (loop for j from 0 to (grid-size-y grid)
+       append (loop for k from 0 to (grid-size-z grid)
+         append (let ((cell (make-cell-with-grid grid i j k)))
+                  (funcall fn cell))))))
+
+(defun make-cell-with-grid (grid i j k)
+  (assert (and (grid-p grid)
+               (<= 0 i) (< i (grid-size-x grid))
+               (<= 0 j) (< j (grid-size-y grid))
+               (<= 0 k) (< k (grid-size-z grid))))
+  (let ((vertices (grid-vertices grid i j k))
+        (values (grid-values grid i j k)))
+    (make-grid-cell vertices values)))
+
+(defvar *vertex-offsets* '((0 0 0) (1 0 0) (1 1 0) (0 1 0)
+                           (0 0 1) (1 0 1) (1 1 1) (0 1 1)))
+
+(defun grid-vertices (grid i j k)
+  (assert (and (grid-p grid)
+               (<= 0 i) (< i (grid-size-x grid))
+               (<= 0 j) (< j (grid-size-y grid))
+               (<= 0 k) (< k (grid-size-z grid))))
+  (let ((vertices (make-array '(8))))
+    (dotimes (n 8)
+      (destructuring-bind (di dj dk) (nth n *vertex-offsets*)
+        (setf (aref vertices n)
+              (grid-point grid (+ i di) (+ j dj) (+ k dk)))))
+    vertices))
+
+(defun grid-values (grid i j k)
+  (assert (and (grid-p grid)
+               (<= 0 i) (< i (grid-size-x grid))
+               (<= 0 j) (< j (grid-size-y grid))
+               (<= 0 k) (< k (grid-size-z grid))))
+  (let ((values (make-array '(8))))
+    (dotimes (n 8)
+      (destructuring-bind (di dj dk) (nth n *vertex-offsets*)
+        (setf (aref values n)
+              (grid-value grid (+ i di) (+ j dj) (+ k dk)))))
+    values))
+
+(defun grid-point (grid i j k)
+  (let ((origin (grid-origin grid))
+        (delta (grid-delta grid)))
+    (make-vec3 (+ (vec3-x origin) (* i delta))
+               (+ (vec3-y origin) (* j delta))
+               (+ (vec3-z origin) (* k delta)))))
+
+(defun grid-value (grid i j k)
+  (aref (grid-values% grid) i j k))
 
 
 ;; utility
@@ -51,7 +134,12 @@
   `(setf ,x (logior ,x ,val)))
 
 
-;; polygonise
+;; main
+
+(defun marching-cubes (fn min max delta isolevel)
+  (let ((grid (make-grid fn min max delta)))
+    (reduce-grid grid (lambda (cell)
+                        (polygonise cell isolevel)))))
 
 (defun polygonise (grid isolevel)
   (let ((cube-index 0)
@@ -59,14 +147,14 @@
     
     ; Determin the index into the edge table which
     ; tells us which vertices are inside of the surface
-    (when (< (grid-value grid 0) isolevel) (inc-logior cube-index 1))
-    (when (< (grid-value grid 1) isolevel) (inc-logior cube-index 2))
-    (when (< (grid-value grid 2) isolevel) (inc-logior cube-index 4))
-    (when (< (grid-value grid 3) isolevel) (inc-logior cube-index 8))
-    (when (< (grid-value grid 4) isolevel) (inc-logior cube-index 16))
-    (when (< (grid-value grid 5) isolevel) (inc-logior cube-index 32))
-    (when (< (grid-value grid 6) isolevel) (inc-logior cube-index 64))
-    (when (< (grid-value grid 7) isolevel) (inc-logior cube-index 128))
+    (when (< (grid-cell-value grid 0) isolevel) (inc-logior cube-index 1))
+    (when (< (grid-cell-value grid 1) isolevel) (inc-logior cube-index 2))
+    (when (< (grid-cell-value grid 2) isolevel) (inc-logior cube-index 4))
+    (when (< (grid-cell-value grid 3) isolevel) (inc-logior cube-index 8))
+    (when (< (grid-cell-value grid 4) isolevel) (inc-logior cube-index 16))
+    (when (< (grid-cell-value grid 5) isolevel) (inc-logior cube-index 32))
+    (when (< (grid-cell-value grid 6) isolevel) (inc-logior cube-index 64))
+    (when (< (grid-cell-value grid 7) isolevel) (inc-logior cube-index 128))
     
     ; Cube is entirely in/out of the surface
     (when (= (aref *edge-table* cube-index) 0)
@@ -76,74 +164,71 @@
     (when (logand (aref *edge-table* cube-index) 1)
       (setf (aref vert-array 0)
             (vertex-interop isolevel
-                            (grid-vertex grid 0) (grid-vertex grid 1)
-                            (grid-value grid 0) (grid-value grid 1))))
+                            (grid-cell-vertex grid 0) (grid-cell-vertex grid 1)
+                            (grid-cell-value grid 0) (grid-cell-value grid 1))))
     (when (logand (aref *edge-table* cube-index) 2)
       (setf (aref vert-array 1)
             (vertex-interop isolevel
-                            (grid-vertex grid 1) (grid-vertex grid 2)
-                            (grid-value grid 1) (grid-value grid 2))))
+                            (grid-cell-vertex grid 1) (grid-cell-vertex grid 2)
+                            (grid-cell-value grid 1) (grid-cell-value grid 2))))
     (when (logand (aref *edge-table* cube-index) 4)
       (setf (aref vert-array 2)
             (vertex-interop isolevel
-                            (grid-vertex grid 2) (grid-vertex grid 3)
-                            (grid-value grid 2) (grid-value grid 3))))
+                            (grid-cell-vertex grid 2) (grid-cell-vertex grid 3)
+                            (grid-cell-value grid 2) (grid-cell-value grid 3))))
     (when (logand (aref *edge-table* cube-index) 8)
       (setf (aref vert-array 3)
             (vertex-interop isolevel
-                            (grid-vertex grid 3) (grid-vertex grid 0)
-                            (grid-value grid 3) (grid-value grid 0))))
+                            (grid-cell-vertex grid 3) (grid-cell-vertex grid 0)
+                            (grid-cell-value grid 3) (grid-cell-value grid 0))))
     (when (logand (aref *edge-table* cube-index) 16)
       (setf (aref vert-array 4)
             (vertex-interop isolevel
-                            (grid-vertex grid 4) (grid-vertex grid 5)
-                            (grid-value grid 4) (grid-value grid 5))))
+                            (grid-cell-vertex grid 4) (grid-cell-vertex grid 5)
+                            (grid-cell-value grid 4) (grid-cell-value grid 5))))
     (when (logand (aref *edge-table* cube-index) 32)
       (setf (aref vert-array 5)
             (vertex-interop isolevel
-                            (grid-vertex grid 5) (grid-vertex grid 6)
-                            (grid-value grid 5) (grid-value grid 6))))
+                            (grid-cell-vertex grid 5) (grid-cell-vertex grid 6)
+                            (grid-cell-value grid 5) (grid-cell-value grid 6))))
     (when (logand (aref *edge-table* cube-index) 64)
       (setf (aref vert-array 6)
             (vertex-interop isolevel
-                            (grid-vertex grid 6) (grid-vertex grid 7)
-                            (grid-value grid 6) (grid-value grid 7))))
+                            (grid-cell-vertex grid 6) (grid-cell-vertex grid 7)
+                            (grid-cell-value grid 6) (grid-cell-value grid 7))))
     (when (logand (aref *edge-table* cube-index) 128)
       (setf (aref vert-array 7)
             (vertex-interop isolevel
-                            (grid-vertex grid 7) (grid-vertex grid 4)
-                            (grid-value grid 7) (grid-value grid 4))))
+                            (grid-cell-vertex grid 7) (grid-cell-vertex grid 4)
+                            (grid-cell-value grid 7) (grid-cell-value grid 4))))
     (when (logand (aref *edge-table* cube-index) 256)
       (setf (aref vert-array 8)
             (vertex-interop isolevel
-                            (grid-vertex grid 0) (grid-vertex grid 4)
-                            (grid-value grid 0) (grid-value grid 4))))
+                            (grid-cell-vertex grid 0) (grid-cell-vertex grid 4)
+                            (grid-cell-value grid 0) (grid-cell-value grid 4))))
     (when (logand (aref *edge-table* cube-index) 512)
       (setf (aref vert-array 9)
             (vertex-interop isolevel
-                            (grid-vertex grid 1) (grid-vertex grid 5)
-                            (grid-value grid 1) (grid-value grid 5))))
+                            (grid-cell-vertex grid 1) (grid-cell-vertex grid 5)
+                            (grid-cell-value grid 1) (grid-cell-value grid 5))))
     (when (logand (aref *edge-table* cube-index) 1024)
       (setf (aref vert-array 10)
             (vertex-interop isolevel
-                            (grid-vertex grid 2) (grid-vertex grid 6)
-                            (grid-value grid 2) (grid-value grid 6))))
+                            (grid-cell-vertex grid 2) (grid-cell-vertex grid 6)
+                            (grid-cell-value grid 2) (grid-cell-value grid 6))))
     (when (logand (aref *edge-table* cube-index) 2048)
       (setf (aref vert-array 11)
             (vertex-interop isolevel
-                            (grid-vertex grid 3) (grid-vertex grid 7)
-                            (grid-value grid 3) (grid-value grid 7))))
+                            (grid-cell-vertex grid 3) (grid-cell-vertex grid 7)
+                            (grid-cell-value grid 3) (grid-cell-value grid 7))))
     
     ; Create the triangle
-    (let ((triangles nil))
-      (loop for i from 0 by 3
-         while (/= (aref *tri-table* cube-index i) -1)
-         do (push (make-triangle
-                    (aref vert-array (aref *tri-table* cube-index i))
-                    (aref vert-array (aref *tri-table* cube-index (+ i 1)))
-                    (aref vert-array (aref *tri-table* cube-index (+ i 2))))
-                  triangles))
-      triangles)))
+    (loop for i from 0 by 3
+       while (/= (aref *tri-table* cube-index i) -1)
+       collect (make-triangle
+                (aref vert-array (aref *tri-table* cube-index i))
+                (aref vert-array (aref *tri-table* cube-index (+ i 1)))
+                (aref vert-array (aref *tri-table* cube-index (+ i 2)))))))
 
 (defun vertex-interop (isolevel p1 p2 val1 val2)
   (when (< (abs (- isolevel val1)) 0.00001)

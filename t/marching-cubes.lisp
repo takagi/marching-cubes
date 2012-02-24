@@ -5,7 +5,7 @@
 
 (in-package :marching-cubes-test)
 
-(defparameter *vertex-offsets*
+(defparameter *vertex-positions*
   (make-array
     '(8)
     :initial-contents
@@ -17,7 +17,7 @@
   (let ((values (make-array
                   '(8)
                   :initial-contents (list v0 v1 v2 v3 v4 v5 v6 v7))))
-    (marching-cubes::make-grid-cell *vertex-offsets* values)))
+    (marching-cubes::make-grid-cell *vertex-positions* values)))
 
 (defun test-triangles (got expected)
   (and (= (length got) (length expected))
@@ -36,24 +36,24 @@
     "polygonise 2" :test #'test-triangles)
 
 (is (marching-cubes::polygonise (make-test-grid 2 2 0 0 0 0 0 0) 1)
-    (list (make-triangle (make-vec3 1 0   1/2)
-                         (make-vec3 1 1/2 0)
-                         (make-vec3 0 0   1/2))
-          (make-triangle (make-vec3 1 1/2 0)
+    (list (make-triangle (make-vec3 1 1/2 0)
                          (make-vec3 0 1/2 0)
+                         (make-vec3 0 0   1/2))
+          (make-triangle (make-vec3 1 0   1/2)
+                         (make-vec3 1 1/2 0)
                          (make-vec3 0 0   1/2)))
     "polygonise 3" :test #'test-triangles)
 
 (is (marching-cubes::polygonise (make-test-grid 2 2 0 2 0 0 0 0) 1)
-    (list (make-triangle (make-vec3 1   0   1/2)
-                         (make-vec3 0   1   1/2)
-                         (make-vec3 0   0   1/2))
+    (list (make-triangle (make-vec3 1   1/2 0  )
+                         (make-vec3 1/2 1   0  )
+                         (make-vec3 0   1   1/2))
           (make-triangle (make-vec3 1   1/2 0  )
                          (make-vec3 0   1   1/2)
                          (make-vec3 1   0   1/2))
-          (make-triangle (make-vec3 1   1/2 0  )
-                         (make-vec3 1/2 1   0  )
-                         (make-vec3 0   1   1/2)))
+          (make-triangle (make-vec3 1   0   1/2)
+                         (make-vec3 0   1   1/2)
+                         (make-vec3 0   0   1/2)))
     "polygonise 4" :test #'test-triangles)
 
 (finalize)
