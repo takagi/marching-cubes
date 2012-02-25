@@ -47,9 +47,9 @@
 
 ;; grid
 
-(defstruct (grid (:constructor make-raw-grid (origin size-x size-y size-z
-                                                     delta values%)))
-  origin size-x size-y size-z delta values%)
+(defstruct (grid (:constructor make-raw-grid (min max size-x size-y size-z
+                                                  delta values%)))
+  min max size-x size-y size-z delta values%)
 
 (defun make-grid (fn min max delta)
   (labels ((size (min max delta)
@@ -59,8 +59,11 @@
     (let ((i (size (vec3-x min) (vec3-x max) delta))
           (j (size (vec3-y min) (vec3-y max) delta))
           (k (size (vec3-z min) (vec3-z max) delta)))
-      (let ((values% (make-grid-values fn i j k min delta)))
-        (make-raw-grid min i j k delta values%)))))
+      (let ((max (make-vec3 (+ (vec3-x min) (* i delta))
+                            (+ (vec3-y min) (* j delta))
+                            (+ (vec3-z min) (* k delta))))
+            (values% (make-grid-values fn i j k min delta)))
+        (make-raw-grid min max i j k delta values%)))))
 
 (defun make-grid-values (fn i j k origin delta)
   (let ((values (make-array (list (1+ i) (1+ j) (1+ k)))))
@@ -71,21 +74,20 @@
                 (funcall fn
                          (+ (vec3-x origin) (* x delta))
                          (+ (vec3-y origin) (* y delta))
-                         (+ (vec3-z origin) (* z delta)))))))))
+                         (+ (vec3-z origin) (* z delta)))))))
+    values))
   
 (defun reduce-grid (grid fn)
   (assert (grid-p grid))
-  (loop for i from 0 to (grid-size-x grid) 
-     append (loop for j from 0 to (grid-size-y grid)
-       append (loop for k from 0 to (grid-size-z grid)
-         append (let ((cell (grid-cell grid i j k)))
-                  (funcall fn cell))))))
+  (let ((triangles nil))
+    (dotimes (i (grid-size-x grid))
+      (dotimes (j (grid-size-y grid))
+        (dotimes (k (grid-size-z grid))
+          (setf triangles (append (funcall fn (grid-cell grid i j k))
+                                  triangles)))))
+    triangles))
 
 (defun grid-cell (grid i j k)
-  (assert (and (grid-p grid)
-               (<= 0 i) (< i (grid-size-x grid))
-               (<= 0 j) (< j (grid-size-y grid))
-               (<= 0 k) (< k (grid-size-z grid))))
   (let ((vertices (grid-cell-vertices grid i j k))
         (values (grid-cell-values grid i j k)))
     (make-grid-cell vertices values)))
@@ -94,10 +96,6 @@
                            (0 0 1) (1 0 1) (1 1 1) (0 1 1)))
 
 (defun grid-cell-vertices (grid i j k)
-  (assert (and (grid-p grid)
-               (<= 0 i) (< i (grid-size-x grid))
-               (<= 0 j) (< j (grid-size-y grid))
-               (<= 0 k) (< k (grid-size-z grid))))
   (let ((vertices (make-array '(8))))
     (dotimes (n 8)
       (destructuring-bind (di dj dk) (nth n *vertex-offsets*)
@@ -106,10 +104,6 @@
     vertices))
 
 (defun grid-cell-values (grid i j k)
-  (assert (and (grid-p grid)
-               (<= 0 i) (< i (grid-size-x grid))
-               (<= 0 j) (< j (grid-size-y grid))
-               (<= 0 k) (< k (grid-size-z grid))))
   (let ((values (make-array '(8))))
     (dotimes (n 8)
       (destructuring-bind (di dj dk) (nth n *vertex-offsets*)
@@ -118,13 +112,21 @@
     values))
 
 (defun grid-point (grid i j k)
-  (let ((origin (grid-origin grid))
+  (assert (and (grid-p grid)
+               (<= 0 i) (<= i (grid-size-x grid))
+               (<= 0 j) (<= j (grid-size-y grid))
+               (<= 0 k) (<= k (grid-size-z grid))))
+  (let ((min (grid-min grid))
         (delta (grid-delta grid)))
-    (make-vec3 (+ (vec3-x origin) (* i delta))
-               (+ (vec3-y origin) (* j delta))
-               (+ (vec3-z origin) (* k delta)))))
+    (make-vec3 (+ (vec3-x min) (* i delta))
+               (+ (vec3-y min) (* j delta))
+               (+ (vec3-z min) (* k delta)))))
 
 (defun grid-value (grid i j k)
+  (assert (and (grid-p grid)
+               (<= 0 i) (<= i (grid-size-x grid))
+               (<= 0 j) (<= j (grid-size-y grid))
+               (<= 0 k) (<= k (grid-size-z grid))))
   (aref (grid-values% grid) i j k))
 
 
