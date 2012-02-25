@@ -26,6 +26,8 @@
 
 (plan nil)
 
+;; test polygonise
+
 (is (marching-cubes::polygonise (make-test-grid 0 0 0 0 0 0 0 0) 1)
     nil "polygonise 1")
 
@@ -55,6 +57,9 @@
                          (make-vec3 0   1   1/2)
                          (make-vec3 0   0   1/2)))
     "polygonise 4" :test #'test-triangles)
+
+
+;; test grid
 
 (defun fn (x y z)
   (if (= x y z 0) 2 0))
@@ -100,6 +105,9 @@
                                      (make-vec3 0 1 1)
                                      2)
           simple-error "make-grid")
+
+
+;; test marching-cubes
 
 (is (marching-cubes #'fn (make-vec3 0 0 0) (make-vec3 1 1 1) 1 1)
     (list (make-triangle (make-vec3 1/2 0   0  )
