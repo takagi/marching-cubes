@@ -14,6 +14,7 @@
   :depends-on (:marching-cubes
                :cl-test-more)
   :components ((:module "t"
+                :serial t
                 :components
                 ((:file "package")
                  (:file "marching-cubes"))))

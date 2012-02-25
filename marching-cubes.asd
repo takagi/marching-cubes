@@ -18,6 +18,7 @@
   :license "LLGPL"
   :depends-on ()
   :components ((:module "src"
+                :serial t
                 :components
                 ((:file "package")
                  (:file "marching-cubes"))))
