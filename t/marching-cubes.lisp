@@ -101,22 +101,17 @@
                                      2)
           simple-error "make-grid")
 
-(is (marching-cubes::marching-cubes #'fn
-                                    (make-vec3 0 0 0)
-                                    (make-vec3 1 1 1)
-                                    1 1)
+(is (marching-cubes #'fn (make-vec3 0 0 0) (make-vec3 1 1 1) 1 1)
     (list (make-triangle (make-vec3 1/2 0   0  )
                          (make-vec3 0   1/2 0  )
                          (make-vec3 0   0   1/2)))
     "marching-cubes 1" :test #'test-triangles)
 
 (defun fn2 (x y z)
+  (declare (ignorable x))
   (if (= y z 0) 2 0))
 
-(is (marching-cubes::marching-cubes #'fn2
-                                    (make-vec3 0 0 0)
-                                    (make-vec3 2 2 2)
-                                    1 1)
+(is (marching-cubes #'fn2 (make-vec3 0 0 0) (make-vec3 2 2 2) 1 1)
     (list (make-triangle (make-vec3 2 1/2 0  )
                          (make-vec3 1 1/2 0  )
                          (make-vec3 1 0   1/2))
@@ -129,6 +124,6 @@
           (make-triangle (make-vec3 1 0   1/2)
                          (make-vec3 1 1/2 0)
                          (make-vec3 0 0   1/2)))
-    "marching-cubes 1" :test #'test-triangles)
+    "marching-cubes 2" :test #'test-triangles)
 
 (finalize)
