@@ -8,6 +8,8 @@
   (:use :cl)
   (:export :marching-cubes
            :make-vec3
+           :vec3-x :vec3-y :vec3-z
            :vec3=
            :make-triangle
+           :vertex
            :triangle=))

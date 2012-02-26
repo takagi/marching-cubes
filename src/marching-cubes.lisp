@@ -27,12 +27,23 @@
   (vertex-1 nil :read-only t)
   (vertex-2 nil :read-only t))
 
+(defmacro vertex (tri i)
+  (case i
+    (0 `(vertex-0 ,tri))
+    (1 `(vertex-1 ,tri))
+    (2 `(vertex-2 ,tri))))
+
 (defun triangle= (a b)
   (and (vec3= (vertex-0 a) (vertex-0 b))
        (vec3= (vertex-1 a) (vertex-1 b))
        (vec3= (vertex-2 a) (vertex-2 b))))
 
-       
+(defun degenerate-triangle (tri)
+  (or (vec3= (vertex-0 tri) (vertex-1 tri))
+      (vec3= (vertex-1 tri) (vertex-2 tri))
+      (vec3= (vertex-2 tri) (vertex-0 tri))))
+
+
 ;; grid-cell
 
 (defstruct (grid-cell (:constructor make-grid-cell (vertices% values%)))
@@ -225,12 +236,13 @@
                             (grid-cell-value grid 3) (grid-cell-value grid 7))))
     
     ; Create the triangle
-    (loop for i from 0 by 3
-       while (/= (aref *tri-table* cube-index i) -1)
-       collect (make-triangle
-                (aref vert-array (aref *tri-table* cube-index i))
-                (aref vert-array (aref *tri-table* cube-index (+ i 1)))
-                (aref vert-array (aref *tri-table* cube-index (+ i 2)))))))
+    (remove-degenerate-triangles
+     (loop for i from 0 by 3
+        while (/= (aref *tri-table* cube-index i) -1)
+        collect (make-triangle
+                 (aref vert-array (aref *tri-table* cube-index i))
+                 (aref vert-array (aref *tri-table* cube-index (+ i 1)))
+                 (aref vert-array (aref *tri-table* cube-index (+ i 2))))))))
 
 (defun vertex-interop (isolevel p1 p2 val1 val2)
   (when (< (abs (- isolevel val1)) 0.00001)
@@ -243,6 +255,9 @@
     (make-vec3 (+ (vec3-x p1) (* mu (- (vec3-x p2) (vec3-x p1))))
                (+ (vec3-y p1) (* mu (- (vec3-y p2) (vec3-y p1))))
                (+ (vec3-z p1) (* mu (- (vec3-z p2) (vec3-z p1)))))))
+
+(defun remove-degenerate-triangles (tris)
+  (remove-if #'degenerate-triangle tris))
 
 
 ;; tables

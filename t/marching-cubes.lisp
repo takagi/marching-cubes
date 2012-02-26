@@ -134,4 +134,8 @@
                          (make-vec3 0 0   1/2)))
     "marching-cubes 2" :test #'test-triangles)
 
+(is (marching-cubes #'fn2 (make-vec3 0 0 0) (make-vec3 2 2 2) 1 1.99999999)
+    nil                                 ; degenerate triangles are removed
+    "marching-cubes 3" :test #'test-triangles)
+
 (finalize)
