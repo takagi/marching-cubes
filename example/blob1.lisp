@@ -5,6 +5,9 @@
 
 (in-package :marching-cubes-example)
 
+
+;; blob
+
 (defun blob (x0 y0 z0 strength radius)
   (lambda (x y z)
     (let ((distance (sqrt (+ (* (- x x0) (- x x0))
@@ -26,16 +29,11 @@
        (funcall blob4 x y z)
        (funcall blob5 x y z))))
 
+
+;; output functions
+
 (defun lines (xs)
   (format nil "~{~a~^~%~}~%" xs))
-
-(defun head ()
-  (lines '("#include \"colors.inc\""
-           "camera {"
-           "  location <0, 0, -20>"
-           "  look_at <0, 0, 0>"
-           "}"
-           "light_source { <0, 0, -20> color White }")))
 
 (defun output (triangles)
   (with-open-file (out "blob1.pov"
@@ -44,6 +42,14 @@
     (output-head out)
     (output-triangles triangles out))
   "ok")
+
+(defun head ()
+  (lines '("#include \"colors.inc\""
+           "camera {"
+           "  location <0, 0, -20>"
+           "  look_at <0, 0, 0>"
+           "}"
+           "light_source { <0, 0, -20> color White }")))
 
 (defun output-head (out)
   (princ (head) out))
@@ -63,6 +69,9 @@
 
 (defun vec3-pov (x)
   (format nil "<~A, ~A, ~A>" (vec3-x x) (vec3-y x) (vec3-z x)))
+
+
+;; main
 
 (defun main ()
   (output (marching-cubes #'fn
