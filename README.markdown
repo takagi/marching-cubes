@@ -4,11 +4,11 @@ A marching cubes implementation based on Paul Bourke's.
 
 ## Usage
 
-Syntax:
+**Syntax:**
 
 **marching-cubes** *density-function* *min-position* *max-position* *delta* *isolevel* => *triangles*
 
-Arguments and Values:
+**Arguments and Values:**
 
 *density-function* --- a function that takes a position as its 3 elements and returns the density at the point
 
