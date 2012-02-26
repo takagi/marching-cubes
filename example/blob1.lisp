@@ -16,11 +16,15 @@
 
 (let ((blob1 (blob 0 0 0 4 4))
       (blob2 (blob 6 0 0 4 4))
-      (blob3 (blob 3 5 0 4 4)))
+      (blob3 (blob 3 5 0 4 4))
+      (blob4 (blob -6 0 0 4 4))
+      (blob5 (blob -3.5 -5 0 4 4)))
   (defun fn (x y z)
     (+ (funcall blob1 x y z)
        (funcall blob2 x y z)
-       (funcall blob3 x y z))))
+       (funcall blob3 x y z)
+       (funcall blob4 x y z)
+       (funcall blob5 x y z))))
 
 (defun lines (xs)
   (format nil "~{~a~^~%~}~%" xs))
