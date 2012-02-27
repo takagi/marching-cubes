@@ -7,9 +7,15 @@
 (defpackage marching-cubes
   (:use :cl)
   (:export :marching-cubes
+           :marching-cubes-smooth
            :make-vec3
            :vec3-x :vec3-y :vec3-z
            :vec3=
+           :normalize-vec3
            :make-triangle
-           :vertex
-           :triangle=))
+           :triangle-vertex
+           :triangle=
+           :make-smooth-triangle
+           :smooth-triangle-vertex
+           :smooth-triangle-normal
+           :smooth-triangle=))

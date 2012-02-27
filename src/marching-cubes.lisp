@@ -18,30 +18,80 @@
        (= (vec3-y a) (vec3-y b))
        (= (vec3-z a) (vec3-z b))))
 
+(defun normalize-vec3 (v)
+  (let ((x (vec3-x v))
+        (y (vec3-y v))
+        (z (vec3-z v)))
+    (let ((r (sqrt (+ (* x x) (* y y) (* z z)))))
+      (if (/= r 0)
+          (make-vec3 (/ x r) (/ y r) (/ z r))
+          (error "zero vector")))))
+
 
 ;; triangle
 
-(defstruct (triangle (:conc-name nil)
-                     (:constructor make-triangle (vertex-0 vertex-1 vertex-2)))
+(defstruct (triangle (:constructor make-triangle (vertex-0 vertex-1 vertex-2)))
   (vertex-0 nil :read-only t)
   (vertex-1 nil :read-only t)
   (vertex-2 nil :read-only t))
 
-(defmacro vertex (tri i)
+(defmacro triangle-vertex (tri i)
   (case i
-    (0 `(vertex-0 ,tri))
-    (1 `(vertex-1 ,tri))
-    (2 `(vertex-2 ,tri))))
+    (0 `(triangle-vertex-0 ,tri))
+    (1 `(triangle-vertex-1 ,tri))
+    (2 `(triangle-vertex-2 ,tri))))
 
 (defun triangle= (a b)
-  (and (vec3= (vertex-0 a) (vertex-0 b))
-       (vec3= (vertex-1 a) (vertex-1 b))
-       (vec3= (vertex-2 a) (vertex-2 b))))
+  (and (vec3= (triangle-vertex-0 a) (triangle-vertex-0 b))
+       (vec3= (triangle-vertex-1 a) (triangle-vertex-1 b))
+       (vec3= (triangle-vertex-2 a) (triangle-vertex-2 b))))
 
 (defun degenerate-triangle (tri)
-  (or (vec3= (vertex-0 tri) (vertex-1 tri))
-      (vec3= (vertex-1 tri) (vertex-2 tri))
-      (vec3= (vertex-2 tri) (vertex-0 tri))))
+  (or (vec3= (triangle-vertex-0 tri) (triangle-vertex-1 tri))
+      (vec3= (triangle-vertex-1 tri) (triangle-vertex-2 tri))
+      (vec3= (triangle-vertex-2 tri) (triangle-vertex-0 tri))))
+
+
+;; smooth triangle
+
+(defstruct (smooth-triangle
+             (:constructor make-smooth-triangle (vertex-0 normal-0
+                                                 vertex-1 normal-1
+                                                 vertex-2 normal-2)))
+  (vertex-0 nil :read-only t)
+  (normal-0 nil :read-only t)
+  (vertex-1 nil :read-only t)
+  (normal-1 nil :read-only t)
+  (vertex-2 nil :read-only t)
+  (normal-2 nil :read-only t))
+
+(defmacro smooth-triangle-vertex (tri i)
+  (case i
+    (0 `(smooth-triangle-vertex-0 ,tri))
+    (1 `(smooth-triangle-vertex-1 ,tri))
+    (2 `(smooth-triangle-vertex-2 ,tri))))
+
+(defmacro smooth-triangle-normal (tri i)
+  (case i
+    (0 `(smooth-triangle-normal-0 ,tri))
+    (1 `(smooth-triangle-normal-1 ,tri))
+    (2 `(smooth-triangle-normal-2 ,tri))))
+
+(defun smooth-triangle= (a b)
+  (and (vec3= (smooth-triangle-vertex-0 a) (smooth-triangle-vertex-0 b))
+       (vec3= (smooth-triangle-normal-0 a) (smooth-triangle-normal-0 b))
+       (vec3= (smooth-triangle-vertex-1 a) (smooth-triangle-vertex-1 b))
+       (vec3= (smooth-triangle-normal-1 a) (smooth-triangle-normal-1 b))
+       (vec3= (smooth-triangle-vertex-2 a) (smooth-triangle-vertex-2 b))
+       (vec3= (smooth-triangle-normal-2 a) (smooth-triangle-normal-2 b))))
+
+(defun to-smooth-triangle (tri fn)
+  (let ((v0 (triangle-vertex tri 0))
+        (v1 (triangle-vertex tri 1))
+        (v2 (triangle-vertex tri 2)))
+    (make-smooth-triangle v0 (funcall fn (vec3-x v0) (vec3-y v0) (vec3-z v0))
+                          v1 (funcall fn (vec3-x v1) (vec3-y v1) (vec3-z v1))
+                          v2 (funcall fn (vec3-x v2) (vec3-y v2) (vec3-z v2)))))
 
 
 ;; grid-cell
@@ -151,8 +201,14 @@
 
 (defun marching-cubes (fn min max delta isolevel)
   (let ((grid (make-grid fn min max delta)))
-    (reduce-grid grid (lambda (cell)
-                        (polygonise cell isolevel)))))
+    (remove-degenerate-triangles
+     (reduce-grid grid (lambda (cell)
+                         (polygonise cell isolevel))))))
+
+(defun marching-cubes-smooth (fn-value fn-normal min max delta isolevel)
+  (mapcar (lambda (tri)
+            (to-smooth-triangle tri fn-normal))
+          (marching-cubes fn-value min max delta isolevel)))
 
 (defun polygonise (grid isolevel)
   (let ((cube-index 0)
@@ -236,13 +292,12 @@
                             (grid-cell-value grid 3) (grid-cell-value grid 7))))
     
     ; Create the triangle
-    (remove-degenerate-triangles
-     (loop for i from 0 by 3
-        while (/= (aref *tri-table* cube-index i) -1)
-        collect (make-triangle
-                 (aref vert-array (aref *tri-table* cube-index i))
-                 (aref vert-array (aref *tri-table* cube-index (+ i 1)))
-                 (aref vert-array (aref *tri-table* cube-index (+ i 2))))))))
+    (loop for i from 0 by 3
+       while (/= (aref *tri-table* cube-index i) -1)
+       collect (make-triangle
+                (aref vert-array (aref *tri-table* cube-index i))
+                (aref vert-array (aref *tri-table* cube-index (+ i 1)))
+                (aref vert-array (aref *tri-table* cube-index (+ i 2)))))))
 
 (defun vertex-interop (isolevel p1 p2 val1 val2)
   (when (< (abs (- isolevel val1)) 0.00001)

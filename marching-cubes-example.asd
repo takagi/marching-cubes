@@ -16,5 +16,6 @@
                 :serial t
                 :components
                 ((:file "package")
-                 (:file "blob1"))))
+                 (:file "blob1")
+                 (:file "blob2"))))
   :perform (load-op :after (op c) (asdf:clear-system c)))

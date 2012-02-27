@@ -4,6 +4,11 @@
 |#
 
 (in-package :cl-user)
-(defpackage marching-cubes-example
+
+(defpackage marching-cubes-example.blob1
+  (:use :cl
+        :marching-cubes))
+
+(defpackage marching-cubes-example.blob2
   (:use :cl
         :marching-cubes))
