@@ -22,7 +22,7 @@
                 :components
                 ((:file "package")
                  (:file "marching-cubes"))))
-  :description ""
+  :description "A marching cubes algorithm implementation in Common Lisp based on Paul Bourke's (http://paulbourke.net/geometry/polygonise/)"
   :long-description
   #.(with-open-file (stream (merge-pathnames
                              #p"README.markdown"
