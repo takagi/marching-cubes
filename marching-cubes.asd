@@ -13,7 +13,7 @@
 (in-package :marching-cubes-asd)
 
 (defsystem marching-cubes
-  :version "0.1-SNAPSHOT"
+  :version "1.0"
   :author "Masayuki Takagi"
   :license "LLGPL"
   :depends-on ()
