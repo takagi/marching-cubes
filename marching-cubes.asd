@@ -21,6 +21,7 @@
                 :serial t
                 :components
                 ((:file "package")
+                 (:file "tables")
                  (:file "marching-cubes"))))
   :description "A marching cubes algorithm implementation in Common Lisp based on Paul Bourke's (http://paulbourke.net/geometry/polygonise/)"
   :long-description
