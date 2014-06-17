@@ -226,66 +226,66 @@
     (when (< (grid-cell-value grid 7) isolevel) (inc-logior cube-index 128))
     
     ; Cube is entirely in/out of the surface
-    (when (= (aref *edge-table* cube-index) 0)
+    (when (= (aref +edge-table+ cube-index) 0)
       (return-from polygonise nil))
     
     ; Find the vertices where the surface intersects the cube
-    (when (logand (aref *edge-table* cube-index) 1)
+    (when (logand (aref +edge-table+ cube-index) 1)
       (setf (aref vert-array 0)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 0) (grid-cell-vertex grid 1)
                             (grid-cell-value grid 0) (grid-cell-value grid 1))))
-    (when (logand (aref *edge-table* cube-index) 2)
+    (when (logand (aref +edge-table+ cube-index) 2)
       (setf (aref vert-array 1)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 1) (grid-cell-vertex grid 2)
                             (grid-cell-value grid 1) (grid-cell-value grid 2))))
-    (when (logand (aref *edge-table* cube-index) 4)
+    (when (logand (aref +edge-table+ cube-index) 4)
       (setf (aref vert-array 2)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 2) (grid-cell-vertex grid 3)
                             (grid-cell-value grid 2) (grid-cell-value grid 3))))
-    (when (logand (aref *edge-table* cube-index) 8)
+    (when (logand (aref +edge-table+ cube-index) 8)
       (setf (aref vert-array 3)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 3) (grid-cell-vertex grid 0)
                             (grid-cell-value grid 3) (grid-cell-value grid 0))))
-    (when (logand (aref *edge-table* cube-index) 16)
+    (when (logand (aref +edge-table+ cube-index) 16)
       (setf (aref vert-array 4)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 4) (grid-cell-vertex grid 5)
                             (grid-cell-value grid 4) (grid-cell-value grid 5))))
-    (when (logand (aref *edge-table* cube-index) 32)
+    (when (logand (aref +edge-table+ cube-index) 32)
       (setf (aref vert-array 5)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 5) (grid-cell-vertex grid 6)
                             (grid-cell-value grid 5) (grid-cell-value grid 6))))
-    (when (logand (aref *edge-table* cube-index) 64)
+    (when (logand (aref +edge-table+ cube-index) 64)
       (setf (aref vert-array 6)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 6) (grid-cell-vertex grid 7)
                             (grid-cell-value grid 6) (grid-cell-value grid 7))))
-    (when (logand (aref *edge-table* cube-index) 128)
+    (when (logand (aref +edge-table+ cube-index) 128)
       (setf (aref vert-array 7)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 7) (grid-cell-vertex grid 4)
                             (grid-cell-value grid 7) (grid-cell-value grid 4))))
-    (when (logand (aref *edge-table* cube-index) 256)
+    (when (logand (aref +edge-table+ cube-index) 256)
       (setf (aref vert-array 8)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 0) (grid-cell-vertex grid 4)
                             (grid-cell-value grid 0) (grid-cell-value grid 4))))
-    (when (logand (aref *edge-table* cube-index) 512)
+    (when (logand (aref +edge-table+ cube-index) 512)
       (setf (aref vert-array 9)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 1) (grid-cell-vertex grid 5)
                             (grid-cell-value grid 1) (grid-cell-value grid 5))))
-    (when (logand (aref *edge-table* cube-index) 1024)
+    (when (logand (aref +edge-table+ cube-index) 1024)
       (setf (aref vert-array 10)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 2) (grid-cell-vertex grid 6)
                             (grid-cell-value grid 2) (grid-cell-value grid 6))))
-    (when (logand (aref *edge-table* cube-index) 2048)
+    (when (logand (aref +edge-table+ cube-index) 2048)
       (setf (aref vert-array 11)
             (vertex-interop isolevel
                             (grid-cell-vertex grid 3) (grid-cell-vertex grid 7)
@@ -293,11 +293,11 @@
     
     ; Create the triangle
     (loop for i from 0 by 3
-       while (/= (aref *tri-table* cube-index i) -1)
+       while (/= (aref +tri-table+ cube-index i) -1)
        collect (make-triangle
-                (aref vert-array (aref *tri-table* cube-index i))
-                (aref vert-array (aref *tri-table* cube-index (+ i 1)))
-                (aref vert-array (aref *tri-table* cube-index (+ i 2)))))))
+                (aref vert-array (aref +tri-table+ cube-index i))
+                (aref vert-array (aref +tri-table+ cube-index (+ i 1)))
+                (aref vert-array (aref +tri-table+ cube-index (+ i 2)))))))
 
 (defun vertex-interop (isolevel p1 p2 val1 val2)
   (when (< (abs (- isolevel val1)) 0.00001)
