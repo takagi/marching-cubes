@@ -2,31 +2,19 @@
 
 A marching cubes algorithm implementation in Common Lisp based on Paul Bourke's (http://paulbourke.net/geometry/polygonise/)
 
-## Usage
+## API
 
-**Syntax:**
+### [Function] marching-cubes
 
-**marching-cubes** *density-function* *min-position* *max-position* *delta* *isolevel* => *triangles*
+    MARCHING-CUBES density-function min-position max-position delta isolevel => triangles
 
-**marching-cubes-smooth** *density-function* *normal-function* *min-position* *max-position* *delta* *isolevel* => *smooth-triangles*
+Extracts a surface from density field represented with `density-function` and returns `triangles` which is a list of triangles. `density-function` is a function that takes three arguments representing the position of a point and returns density as a scalar at the point. `min-position` and `max-position` are `vec3` values and  specify the minimun point and the maximun point of a grid to be processed. `delta` is a scalar that specifies the size of a cell in a grid to be processed. `isolevel` is a scalar that specifies the threshold of mesh construction.
 
-**Arguments and Values:**
+### [Function] marching-cubes-smooth
 
-*density-function* --- a function that takes a position as its three elements and returns density at the point
+    MARCHING-CUBES-SMOOTH density-function normal-function min-position max-position delta isolevel => smooth-triangles
 
-*normal-function* --- a function that takes a position as its three elements and returns a normal vector at the point
-
-*min-position* --- a vec3 value that specifies the minimum point of grid to be processed
-
-*max-position* --- a vec3 value that specifies the maximum point of grid to be processed
-
-*delta* --- a scalar vlaue that specifies the cell size of grid to be processed
-
-*isolevel* --- a scalar value that specifies the threshold of mesh construction
-
-*triangles* --- a list of triangles
-
-*smooth-triangles* --- a list of smooth triangles
+Same as `marching-cubes` except that `marching-cubes-smooth` returns a list of smooth triangles which have normal vectors at each vertex. `normal-function` is a function that takes three arguments representing the position of a point and returns a normal vector at the point. Other arguments are same as `marching-cubes`'s. 
 
 ## Example
 
@@ -40,7 +28,7 @@ See example/ directory.
 
 Copyright (c) 2012 Masayuki Takagi (kamonama@gmail.com)
 
-# License
+## License
 
 Licensed under the LLGPL License.
 
