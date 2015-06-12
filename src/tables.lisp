@@ -8,7 +8,7 @@
 
 ;; tables
 
-(defparameter *edge-table*
+(defparameter +edge-table+
   (make-array
     '(256)
     :element-type 'fixnum
@@ -46,7 +46,7 @@
       #xf00 #xe09 #xd03 #xc0a #xb06 #xa0f #x905 #x80c
       #x70c #x605 #x50f #x406 #x30a #x203 #x109 #x0)))
 
-(defparameter *tri-table*
+(defparameter +tri-table+
   (make-array
    '(256 16)
    :element-type 'fixnum
