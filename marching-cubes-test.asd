@@ -18,5 +18,5 @@
                 :components
                 ((:file "package")
                  (:file "marching-cubes"))))
-  :description "test for marching-cubes package"
+  :description "Test for marching-cubes."
   :perform (load-op :after (op c) (asdf:clear-system c)))

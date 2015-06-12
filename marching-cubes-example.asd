@@ -18,4 +18,5 @@
                 ((:file "package")
                  (:file "blob1")
                  (:file "blob2"))))
+  :description "Example for marching-cubes."
   :perform (load-op :after (op c) (asdf:clear-system c)))
